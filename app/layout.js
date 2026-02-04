@@ -32,6 +32,15 @@ export async function generateMetadata() {
       description: "1원으로 당신의 메시지를 전 세계에 보여주세요!",
       images: [imageUrl],
     },
+    icons: {
+      icon: '/1wonad.png',
+      shortcut: '/favicon.ico', // 기본 파비콘을 위한 설정
+      apple: '/1wonad.png',
+      other: {
+        rel: 'apple-touch-icon-precomposed',
+        url: '/1wonad.png',
+      },
+    },
   };
 }
 
@@ -42,6 +51,13 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
+        <script
+          src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"
+          integrity="sha384-sO8wKAB3wsyTrhHOVjGkjkUK5BvQzKjKIzHSV9Qh4fWMK/XGfmCkgnePtwl3Htpj"
+          crossOrigin="anonymous"
+          async
+          defer
+        ></script>
         <footer className="w-full bg-gray-900 text-gray-400 text-xs py-4 px-4 text-center mt-auto">
           <div className="max-w-4xl mx-auto space-y-1">
             <p>상호명: 이너몰 | 사업자등록번호: 685-26-02075</p>

@@ -42,6 +42,13 @@ export default function Billboard({ initialMessage }) {
     };
   }, []); // 빈 배열은 컴포넌트 마운트 시 한 번만 실행됨
 
+  // 카카오 SDK 초기화
+  useEffect(() => {
+    if (window.Kakao && !window.Kakao.isInitialized()) {
+      window.Kakao.init(process.env.NEXT_PUBLIC_KAKAOTALK_JS_KEY);
+    }
+  }, []);
+
   const handleSubmit = async () => {
     if (!messageInput.trim() || !nicknameInput.trim() || isSubmitting) return;
 
@@ -59,13 +66,46 @@ export default function Billboard({ initialMessage }) {
       const { redirect_url } = response.data;
       if (redirect_url) {
         window.location.href = redirect_url;
-      } else {
-        throw new Error('카카오페이 URL을 받지 못했습니다.');
       }
     } catch (err) {
       console.error('Payment initiation failed:', err.response ? err.response.data : err.message);
       setError('결제 시작 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
       setIsSubmitting(false);
+    }
+  };
+
+  const shareKakaoTalk = () => {
+    if (window.Kakao && window.Kakao.isInitialized()) {
+      const shareUrl = window.location.href; // 현재 페이지 URL
+      const imageUrl = `${window.location.origin}/api/og?id=${latestMessage?.id || 'no_message'}`;
+      const descriptionText = latestMessage 
+        ? `"${latestMessage.text}" - ${latestMessage.nickname}`
+        : '1원으로 당신의 메시지를 전 세계에 보여주세요!';
+
+      window.Kakao.Share.sendDefault({
+        objectType: 'feed', // 피드 형식
+        content: {
+          title: '1원 전광판',
+          description: descriptionText,
+          imageUrl: imageUrl,
+          link: {
+            mobileWebUrl: shareUrl,
+            webUrl: shareUrl,
+          },
+        },
+        buttons: [
+          {
+            title: '전광판 보기',
+            link: {
+              mobileWebUrl: shareUrl,
+              webUrl: shareUrl,
+            },
+          },
+        ],
+      });
+    } else {
+      console.error('Kakao SDK is not initialized.');
+      alert('카카오톡 공유 기능을 사용할 수 없습니다. 잠시 후 다시 시도해주세요.');
     }
   };
 
@@ -94,14 +134,14 @@ export default function Billboard({ initialMessage }) {
         )}
         <div className="bg-gray-800 p-6 rounded-lg shadow-md">
           <h2 className="text-2xl font-bold mb-4 text-center">메시지 등록하기</h2>
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             <input
               type="text"
               placeholder="이름 (최대 10자)"
               maxLength="10"
               value={nicknameInput}
               onChange={(e) => setNicknameInput(e.target.value)}
-              className="w-full bg-gray-700 text-white placeholder-gray-400 border-2 border-transparent focus:border-yellow-400 focus:outline-none rounded-md px-4 py-2 transition-colors"
+              className="flex-grow bg-gray-700 text-white placeholder-gray-400 border-2 border-transparent focus:border-yellow-400 focus:outline-none rounded-md px-4 py-2 transition-colors"
             />
             <input
               type="text"
@@ -109,7 +149,7 @@ export default function Billboard({ initialMessage }) {
               maxLength="20"
               value={messageInput}
               onChange={(e) => setMessageInput(e.target.value)}
-              className="w-full bg-gray-700 text-white placeholder-gray-400 border-2 border-transparent focus:border-yellow-400 focus:outline-none rounded-md px-4 py-2 transition-colors"
+              className="flex-grow bg-gray-700 text-white placeholder-gray-400 border-2 border-transparent focus:border-yellow-400 focus:outline-none rounded-md px-4 py-2 transition-colors"
             />
             <button
               onClick={handleSubmit}
@@ -117,6 +157,12 @@ export default function Billboard({ initialMessage }) {
               disabled={!messageInput.trim() || !nicknameInput.trim() || isSubmitting}
             >
               {isSubmitting ? '처리 중...' : '1원 보내고 등록'}
+            </button>
+            <button
+              onClick={shareKakaoTalk}
+              className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-6 rounded-md transition-transform transform hover:scale-105"
+            >
+              카카오톡 공유
             </button>
           </div>
         </div>
