@@ -31,13 +31,10 @@ export async function GET() {
         }}
       >
         <div style={{ fontSize: 80, fontWeight: 'bold', marginBottom: 20, display: 'flex' }}>
-          1원 전광판
-        </div>
-        <div style={{ fontSize: 50, color: '#90EE90', display: 'flex' }}>
-          "{messageText}"
+            "{messageText}"
         </div>
         {nicknameText && (
-          <div style={{ fontSize: 40, marginTop: 10, color: '#90EE90', display: 'flex' }}>
+          <div style={{ fontSize: 60, marginTop: 10, color: '#90EE90', display: 'flex' }}>
             {nicknameText}
           </div>
         )}
