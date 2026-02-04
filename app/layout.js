@@ -34,7 +34,7 @@ export async function generateMetadata() {
     },
     icons: {
       icon: '/1wonad.png',
-      shortcut: '/favicon.ico', // 기본 파비콘을 위한 설정
+      shortcut: '/1wonad.png', // 기본 파비콘을 위한 설정
       apple: '/1wonad.png',
       other: {
         rel: 'apple-touch-icon-precomposed',
