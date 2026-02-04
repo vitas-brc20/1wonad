@@ -19,13 +19,12 @@ const supabase = createClient(
 export async function getLatestMessage() {
   const { data, error } = await supabase
     .from('messages')
-    .select('text, nickname')
+    .select('id, text, nickname') // id도 함께 선택
     .eq('status', 'paid')
     .order('created_at', { ascending: false })
     .limit(1)
     .single();
 
-  // .single()은 결과가 없을 때 에러를 발생시키므로, 이를 정상적인 null 값으로 처리합니다.
   if (error && error.code !== 'PGRST116') {
     console.error('Error fetching latest message:', error);
     return null;

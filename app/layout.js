@@ -1,5 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { getLatestMessage } from '@/app/actions';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -11,21 +12,28 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata = {
-  title: "1원 전광판",
-  description: "1원으로 당신의 메시지를 전 세계에 보여주세요!",
-  openGraph: {
+export async function generateMetadata() {
+  const latestMessage = await getLatestMessage();
+  const cacheBusterId = latestMessage?.id || 'no_message'; // 메시지 없으면 기본값 사용
+
+  const imageUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/og?id=${cacheBusterId}`;
+
+  return {
     title: "1원 전광판",
     description: "1원으로 당신의 메시지를 전 세계에 보여주세요!",
-    images: [`${process.env.NEXT_PUBLIC_BASE_URL}/api/og`],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "1원 전광판",
-    description: "1원으로 당신의 메시지를 전 세계에 보여주세요!",
-    images: [`${process.env.NEXT_PUBLIC_BASE_URL}/api/og`],
-  },
-};
+    openGraph: {
+      title: "1원 전광판",
+      description: "1원으로 당신의 메시지를 전 세계에 보여주세요!",
+      images: [imageUrl],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "1원 전광판",
+      description: "1원으로 당신의 메시지를 전 세계에 보여주세요!",
+      images: [imageUrl],
+    },
+  };
+}
 
 export default function RootLayout({ children }) {
   return (
