@@ -1,13 +1,28 @@
 import { ImageResponse } from '@vercel/og';
-import { getLatestMessage } from '@/app/actions';
+import { getLatestMessage, getMessageById } from '@/app/actions'; // getMessageById 임포트 추가
 
 export const runtime = 'edge'; // Edge 런타임을 사용하여 성능 최적화
 
-export async function GET() {
-  const latestMessage = await getLatestMessage();
+export async function GET(req) {
+  // URL에서 id 쿼리 파라미터 파싱
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get('id');
 
-  const messageText = latestMessage?.text || '아직 등록된 메시지가 없습니다. 첫 메시지를 남겨주세요!';
-  const nicknameText = latestMessage?.nickname ? `- ${latestMessage.nickname}` : '';
+  let displayMessage = null;
+
+  if (id) {
+    // id가 있으면 해당 id의 메시지를 가져오려 시도
+    displayMessage = await getMessageById(id);
+  }
+
+  if (!displayMessage) {
+    // id로 메시지를 찾지 못했거나 id가 없으면 최신 메시지 가져오기
+    displayMessage = await getLatestMessage();
+  }
+
+  const messageText = displayMessage?.text || '아직 등록된 메시지가 없습니다. 첫 메시지를 남겨주세요!';
+  const nicknameText = displayMessage?.nickname ? `- ${displayMessage.nickname}` : '';
+
 
   return new ImageResponse(
     (

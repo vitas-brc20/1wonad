@@ -32,3 +32,24 @@ export async function getLatestMessage() {
 
   return data;
 }
+
+/**
+ * 특정 ID를 가진 결제 완료된 메시지를 가져옵니다.
+ * @param {string} id - 메시지 ID
+ * @returns {Promise<object|null>}
+ */
+export async function getMessageById(id) {
+  const { data, error } = await supabase
+    .from('messages')
+    .select('id, text, nickname')
+    .eq('id', id)
+    .eq('status', 'paid')
+    .single();
+
+  if (error && error.code !== 'PGRST116') {
+    console.error(`Error fetching message by ID (${id}):`, error);
+    return null;
+  }
+
+  return data;
+}
