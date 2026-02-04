@@ -43,6 +43,10 @@ export async function GET() {
     {
       width: 1200,
       height: 630,
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Expires': '0',
+      },
     },
   );
 }
