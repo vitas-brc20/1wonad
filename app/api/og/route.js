@@ -30,14 +30,14 @@ export async function GET() {
           textShadow: '0 0 10px #FFD700, 0 0 20px #FFD700', // Neon text glow
         }}
       >
-        <div style={{ fontSize: 80, fontWeight: 'bold', marginBottom: 20 }}>
+        <div style={{ fontSize: 80, fontWeight: 'bold', marginBottom: 20, display: 'flex' }}>
           1원 전광판
         </div>
-        <div style={{ fontSize: 50, color: '#90EE90' }}>
+        <div style={{ fontSize: 50, color: '#90EE90', display: 'flex' }}>
           "{messageText}"
         </div>
         {nicknameText && (
-          <div style={{ fontSize: 40, marginTop: 10, color: '#90EE90' }}>
+          <div style={{ fontSize: 40, marginTop: 10, color: '#90EE90', display: 'flex' }}>
             {nicknameText}
           </div>
         )}
