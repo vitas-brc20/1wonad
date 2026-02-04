@@ -58,10 +58,11 @@ export async function GET(req) {
     {
       width: 1200,
       height: 630,
-      headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-        'Expires': '0',
-      },
-    },
+              headers: {
+                  'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+                  'Pragma': 'no-cache',
+                  'Expires': '0',
+                  'Surrogate-Control': 'no-store' // Vercel CDN 캐시를 위한 헤더
+              },    },
   );
 }

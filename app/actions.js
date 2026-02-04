@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
+import { revalidatePath } from 'next/cache';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -31,6 +32,7 @@ export async function getLatestMessage() {
   }
 
   return data;
+  revalidatePath('/');
 }
 
 /**
@@ -52,4 +54,5 @@ export async function getMessageById(id) {
   }
 
   return data;
+  revalidatePath('/');
 }
