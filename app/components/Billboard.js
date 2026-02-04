@@ -44,8 +44,14 @@ export default function Billboard({ initialMessage }) {
 
   // 카카오 SDK 초기화
   useEffect(() => {
+    console.log('Billboard: useEffect for Kakao SDK initialization running.');
     if (window.Kakao && !window.Kakao.isInitialized()) {
       window.Kakao.init(process.env.NEXT_PUBLIC_KAKAOTALK_JS_KEY);
+      console.log('Billboard: Kakao SDK initialized with key:', process.env.NEXT_PUBLIC_KAKAOTALK_JS_KEY);
+    } else if (window.Kakao) {
+      console.log('Billboard: Kakao SDK already initialized or window.Kakao exists but isInitialized is true.');
+    } else {
+      console.log('Billboard: window.Kakao not available yet.');
     }
   }, []);
 
@@ -75,6 +81,12 @@ export default function Billboard({ initialMessage }) {
   };
 
   const shareKakaoTalk = () => {
+    console.log('Billboard: shareKakaoTalk called.');
+    console.log('Billboard: window.Kakao:', window.Kakao);
+    if (window.Kakao) {
+        console.log('Billboard: window.Kakao.isInitialized():', window.Kakao.isInitialized());
+    }
+
     if (window.Kakao && window.Kakao.isInitialized()) {
       const shareUrl = window.location.href; // 현재 페이지 URL
       const imageUrl = `${window.location.origin}/api/og?id=${latestMessage?.id || 'no_message'}&_=${Date.now()}`;
