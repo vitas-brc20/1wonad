@@ -16,7 +16,7 @@ export async function generateMetadata() {
   const latestMessage = await getLatestMessage();
   const cacheBusterId = latestMessage?.id || 'no_message'; // 메시지 없으면 기본값 사용
 
-  const imageUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/og?id=${cacheBusterId}`;
+  const imageUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/og?id=${cacheBusterId}&_=${Date.now()}`;
 
   return {
     title: "1원 전광판",

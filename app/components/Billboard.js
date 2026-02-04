@@ -77,7 +77,7 @@ export default function Billboard({ initialMessage }) {
   const shareKakaoTalk = () => {
     if (window.Kakao && window.Kakao.isInitialized()) {
       const shareUrl = window.location.href; // 현재 페이지 URL
-      const imageUrl = `${window.location.origin}/api/og?id=${latestMessage?.id || 'no_message'}`;
+      const imageUrl = `${window.location.origin}/api/og?id=${latestMessage?.id || 'no_message'}&_=${Date.now()}`;
       const descriptionText = latestMessage 
         ? `"${latestMessage.text}" - ${latestMessage.nickname}`
         : '1원으로 당신의 메시지를 전 세계에 보여주세요!';
