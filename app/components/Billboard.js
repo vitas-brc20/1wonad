@@ -15,9 +15,7 @@ export default function Billboard({ initialMessage }) {
   const [nicknameInput, setNicknameInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const [latestMessage, setLatestMessage] = useState(initialMessage); // 단일 메시지 상태
-
-  // 실시간 구독 설정
+  const [latestMessage, setLatestMessage] = useState(initialMessage);
   useEffect(() => {
     const channel = supabase
       .channel('latest_message_changes') // 채널 이름은 자유롭게 지정 가능
@@ -44,16 +42,44 @@ export default function Billboard({ initialMessage }) {
 
   // 카카오 SDK 초기화
   useEffect(() => {
-    console.log('Billboard: useEffect for Kakao SDK initialization running.');
     if (window.Kakao && !window.Kakao.isInitialized()) {
       window.Kakao.init(process.env.NEXT_PUBLIC_KAKAOTALK_JS_KEY);
-      console.log('Billboard: Kakao SDK initialized with key:', process.env.NEXT_PUBLIC_KAKAOTALK_JS_KEY);
-    } else if (window.Kakao) {
-      console.log('Billboard: Kakao SDK already initialized or window.Kakao exists but isInitialized is true.');
-    } else {
-      console.log('Billboard: window.Kakao not available yet.');
     }
   }, []);
+
+  // 카카오 공유 버튼 생성
+  useEffect(() => {
+    if (window.Kakao && window.Kakao.isInitialized()) {
+      const shareUrl = window.location.href; // 현재 페이지 URL
+      const imageUrl = `${window.location.origin}/api/og?id=${latestMessage?.id || 'no_message'}&_=${Date.now()}`;
+      const descriptionText = latestMessage
+        ? `"${latestMessage.text}" - ${latestMessage.nickname}`
+        : '1원으로 당신의 메시지를 전 세계에 보여주세요!';
+
+      window.Kakao.Share.createDefaultButton({
+        container: '#kakaotalk-sharing-btn',
+        objectType: 'feed',
+        content: {
+          title: '1원 전광판',
+          description: descriptionText,
+          imageUrl: imageUrl,
+          link: {
+            mobileWebUrl: shareUrl,
+            webUrl: shareUrl,
+          },
+        },
+        buttons: [
+          {
+            title: '전광판 보기',
+            link: {
+              mobileWebUrl: shareUrl,
+              webUrl: shareUrl,
+            },
+          },
+        ],
+      });
+    }
+  }, [latestMessage]); // latestMessage가 변경될 때마다 공유 내용 업데이트
 
   const handleSubmit = async () => {
     if (!messageInput.trim() || !nicknameInput.trim() || isSubmitting) return;
@@ -77,47 +103,6 @@ export default function Billboard({ initialMessage }) {
       console.error('Payment initiation failed:', err.response ? err.response.data : err.message);
       setError('결제 시작 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
       setIsSubmitting(false);
-    }
-  };
-
-  const shareKakaoTalk = () => {
-    console.log('Billboard: shareKakaoTalk called.');
-    console.log('Billboard: window.Kakao:', window.Kakao);
-    if (window.Kakao) {
-        console.log('Billboard: window.Kakao.isInitialized():', window.Kakao.isInitialized());
-    }
-
-    if (window.Kakao && window.Kakao.isInitialized()) {
-      const shareUrl = window.location.href; // 현재 페이지 URL
-      const imageUrl = `${window.location.origin}/api/og?id=${latestMessage?.id || 'no_message'}&_=${Date.now()}`;
-      const descriptionText = latestMessage 
-        ? `"${latestMessage.text}" - ${latestMessage.nickname}`
-        : '1원으로 당신의 메시지를 전 세계에 보여주세요!';
-
-      window.Kakao.Share.sendDefault({
-        objectType: 'feed', // 피드 형식
-        content: {
-          title: '1원 전광판',
-          description: descriptionText,
-          imageUrl: imageUrl,
-          link: {
-            mobileWebUrl: shareUrl,
-            webUrl: shareUrl,
-          },
-        },
-        buttons: [
-          {
-            title: '전광판 보기',
-            link: {
-              mobileWebUrl: shareUrl,
-              webUrl: shareUrl,
-            },
-          },
-        ],
-      });
-    } else {
-      console.error('Kakao SDK is not initialized.');
-      alert('카카오톡 공유 기능을 사용할 수 없습니다. 잠시 후 다시 시도해주세요.');
     }
   };
 
@@ -171,7 +156,7 @@ export default function Billboard({ initialMessage }) {
               {isSubmitting ? '처리 중...' : '1원 보내고 등록'}
             </button>
             <button
-              onClick={shareKakaoTalk}
+              id="kakaotalk-sharing-btn"
               className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-6 rounded-md transition-transform transform hover:scale-105"
             >
               카카오톡 공유

@@ -53,10 +53,8 @@ export default function RootLayout({ children }) {
         {children}
         <script
           src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.7/kakao.min.js"
-          integrity="sha384-TiCUE00h649CAMonG018J2ujOgDKW/kVWlChEuu4jK2vxfAAD0eZxzCKakxg55G4"
+          integrity="sha384-tJkjbtDbvoxO+diRuDtwRO9JXR7pjWnfjfRn5ePUpl7e7RJCxKCwwnfqUAdXh53p"
           crossOrigin="anonymous"
-          async
-          defer
         ></script>
         <footer className="w-full bg-gray-900 text-gray-400 text-xs py-4 px-4 text-center mt-auto">
           <div className="max-w-4xl mx-auto space-y-1">
