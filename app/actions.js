@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, unstable_noStore as noStore } from 'next/cache';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -18,6 +18,7 @@ const supabase = createClient(
  * @returns {Promise<object|null>}
  */
 export async function getLatestMessage() {
+  noStore(); // 이 함수는 항상 최신 데이터를 가져오도록 캐싱을 비활성화합니다.
   const { data, error } = await supabase
     .from('messages')
     .select('id, text, nickname') // id도 함께 선택
@@ -32,7 +33,6 @@ export async function getLatestMessage() {
   }
 
   return data;
-  revalidatePath('/');
 }
 
 /**
@@ -41,6 +41,7 @@ export async function getLatestMessage() {
  * @returns {Promise<object|null>}
  */
 export async function getMessageById(id) {
+  noStore(); // 이 함수는 항상 최신 데이터를 가져오도록 캐싱을 비활성화합니다.
   const { data, error } = await supabase
     .from('messages')
     .select('id, text, nickname')
@@ -54,5 +55,4 @@ export async function getMessageById(id) {
   }
 
   return data;
-  revalidatePath('/');
 }
