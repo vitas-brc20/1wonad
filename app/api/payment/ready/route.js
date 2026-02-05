@@ -33,7 +33,7 @@ export async function POST(req) {
       throw new Error('Failed to create initial message entry.');
     }
 
-const partner_order_id = messageData.id.toString();
+    const partner_order_id = messageData.id.toString();
     const kakaoPayReadyUrl = 'https://open-api.kakaopay.com/online/v1/payment/ready';
     
     // 개발/운영 환경에 따라 다른 키를 사용
@@ -44,9 +44,8 @@ const partner_order_id = messageData.id.toString();
     // 디버깅: Secret 키가 제대로 로드되었는지 확인
     console.log(`[${process.env.NODE_ENV} mode] Secret Key used:`, secretKey);
 
-    const approval_url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/payment/approve`;
-    const cancel_url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/payment/cancel`;
-    const fail_url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/payment/fail`;
+    // *** MODIFIED: Add partner_order_id to the callback URL ***
+    const callback_url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/payment/callback?partner_order_id=${partner_order_id}`;
 
     // 2. 카카오페이 '결제 준비' API에 보낼 데이터 (JSON 형식)
     const payload = {
@@ -57,9 +56,9 @@ const partner_order_id = messageData.id.toString();
       quantity: 1,
       total_amount: 1,
       tax_free_amount: 0,
-      approval_url: approval_url,
-      cancel_url: cancel_url,
-      fail_url: fail_url,
+      approval_url: callback_url,
+      cancel_url: callback_url,
+      fail_url: callback_url,
     };
     
     // 3. 카카오페이 API 호출 (v1 주소 + v2 인증 + JSON 바디)
