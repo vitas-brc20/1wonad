@@ -19,17 +19,17 @@ export async function generateMetadata() {
   const imageUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/og?id=${cacheBusterId}&_=${Date.now()}`;
 
   return {
-    title: "1원 전광판",
-    description: "1원으로 당신의 메시지를 전 세계에 보여주세요!",
+    title: "전광판",
+    description: "당신의 메시지를 전 세계에 보여주세요!",
     openGraph: {
-      title: "1원 전광판",
-      description: "1원으로 당신의 메시지를 전 세계에 보여주세요!",
+      title: "전광판",
+      description: "당신의 메시지를 전 세계에 보여주세요!",
       images: [imageUrl],
     },
     twitter: {
       card: "summary_large_image",
-      title: "1원 전광판",
-      description: "1원으로 당신의 메시지를 전 세계에 보여주세요!",
+      title: "전광판",
+      description: "당신의 메시지를 전 세계에 보여주세요!",
       images: [imageUrl],
     },
     icons: {

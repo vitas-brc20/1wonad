@@ -15,13 +15,12 @@ const supabase = createClient(
 
 /**
  * 결제 완료된 가장 최신 메시지 1개를 가져옵니다.
- * @returns {Promise<object|null>}
  */
 export async function getLatestMessage() {
-  noStore(); // 이 함수는 항상 최신 데이터를 가져오도록 캐싱을 비활성화합니다.
+  noStore();
   const { data, error } = await supabase
     .from('messages')
-    .select('id, text, nickname') // id도 함께 선택
+    .select('id, text, nickname')
     .eq('status', 'paid')
     .order('created_at', { ascending: false })
     .limit(1)
@@ -37,11 +36,9 @@ export async function getLatestMessage() {
 
 /**
  * 특정 ID를 가진 결제 완료된 메시지를 가져옵니다.
- * @param {string} id - 메시지 ID
- * @returns {Promise<object|null>}
  */
 export async function getMessageById(id) {
-  noStore(); // 이 함수는 항상 최신 데이터를 가져오도록 캐싱을 비활성화합니다.
+  noStore();
   const { data, error } = await supabase
     .from('messages')
     .select('id, text, nickname')
@@ -55,4 +52,27 @@ export async function getMessageById(id) {
   }
 
   return data;
+}
+
+/**
+ * 새로운 메시지를 등록합니다. (무료 버전)
+ */
+export async function createMessage(text, nickname) {
+  const { data, error } = await supabase
+    .from('messages')
+    .insert({
+      text: text,
+      nickname: nickname,
+      status: 'paid'
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating message:', error);
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath('/');
+  return { success: true, data };
 }

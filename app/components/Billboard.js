@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { createClient } from '@supabase/supabase-js'; // Supabase 클라이언트 사이드용
+import { createClient } from '@supabase/supabase-js';
+import { createMessage } from '@/app/actions';
 
-// Supabase 클라이언트 초기화 (클라이언트 컴포넌트용)
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -16,51 +15,48 @@ export default function Billboard({ initialMessage }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [latestMessage, setLatestMessage] = useState(initialMessage);
+
   useEffect(() => {
     const channel = supabase
-      .channel('latest_message_changes') // 채널 이름은 자유롭게 지정 가능
+      .channel('latest_message_changes')
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE', // UPDATE 이벤트만 구독
+          event: '*',
           schema: 'public',
           table: 'messages',
-          filter: `status=eq.paid`, // status가 'paid'인 경우만 필터링
+          filter: `status=eq.paid`,
         },
         (payload) => {
-          // 새로 'paid' 상태가 된 메시지를 최신 메시지로 설정
           setLatestMessage(payload.new);
         }
       )
       .subscribe();
 
-    // 컴포넌트 언마운트 시 구독 해제
     return () => {
       channel.unsubscribe();
     };
-  }, []); // 빈 배열은 컴포넌트 마운트 시 한 번만 실행됨
+  }, []);
 
-  // 카카오 SDK 초기화
   useEffect(() => {
     if (window.Kakao && !window.Kakao.isInitialized()) {
       window.Kakao.init(process.env.NEXT_PUBLIC_KAKAOTALK_JS_KEY);
     }
   }, []);
 
-  // 카카오 공유 버튼 생성
   useEffect(() => {
     if (window.Kakao && window.Kakao.isInitialized()) {
-      const shareUrl = window.location.href; // 현재 페이지 URL
+      const shareUrl = window.location.href;
       const imageUrl = `${window.location.origin}/api/og?id=${latestMessage?.id || 'no_message'}&_=${Date.now()}`;
       const descriptionText = latestMessage
         ? `"${latestMessage.text}" - ${latestMessage.nickname}`
-        : '1원으로 당신의 메시지를 전 세계에 보여주세요!';
+        : '당신의 메시지를 전 세계에 보여주세요!';
 
       window.Kakao.Share.createDefaultButton({
         container: '#kakaotalk-sharing-btn',
         objectType: 'feed',
         content: {
-          title: '1원 전광판',
+          title: '전광판',
           description: descriptionText,
           imageUrl: imageUrl,
           link: {
@@ -79,7 +75,7 @@ export default function Billboard({ initialMessage }) {
         ],
       });
     }
-  }, [latestMessage]); // latestMessage가 변경될 때마다 공유 내용 업데이트
+  }, [latestMessage]);
 
   const handleSubmit = async () => {
     if (!messageInput.trim() || !nicknameInput.trim() || isSubmitting) return;
@@ -88,20 +84,18 @@ export default function Billboard({ initialMessage }) {
     setError(null);
 
     try {
-      // 1. 우리 서버의 '결제 준비' API 호출
-      const response = await axios.post('/api/payment/ready', {
-        message: messageInput,
-        nickname: nicknameInput,
-      });
-
-      // 2. 응답으로 받은 카카오페이 결제 페이지 URL로 사용자 이동
-      const { redirect_url } = response.data;
-      if (redirect_url) {
-        window.location.href = redirect_url;
+      const result = await createMessage(messageInput, nicknameInput);
+      
+      if (result.success) {
+        setMessageInput('');
+        setNicknameInput('');
+      } else {
+        setError('메시지 등록 중 오류가 발생했습니다: ' + result.error);
       }
     } catch (err) {
-      console.error('Payment initiation failed:', err.response ? err.response.data : err.message);
-      setError('결제 시작 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+      console.error('Submission failed:', err);
+      setError('서버와 통신 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -109,8 +103,8 @@ export default function Billboard({ initialMessage }) {
   return (
     <div className="bg-black text-white min-h-screen flex flex-col items-center justify-center p-4 font-sans w-full">
       <header className="w-full max-w-4xl text-center mb-8">
-        <h1 className="text-5xl font-bold text-yellow-300 tracking-wider">1원 전광판</h1>
-        <p className="text-lg text-gray-400 mt-2">1원으로 당신의 메시지를 전 세계에 보여주세요!</p>
+        <h1 className="text-5xl font-bold text-yellow-300 tracking-wider">전광판</h1>
+        <p className="text-lg text-gray-400 mt-2">당신의 메시지를 전 세계에 보여주세요!</p>
       </header>
 
       <main className="w-full max-w-4xl mb-8 flex justify-center items-center h-48 bg-gray-900 border-2 border-yellow-400 rounded-lg p-4 shadow-lg">
@@ -153,7 +147,7 @@ export default function Billboard({ initialMessage }) {
               className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-2 px-6 rounded-md transition-transform transform hover:scale-105 disabled:bg-gray-500 disabled:cursor-not-allowed"
               disabled={!messageInput.trim() || !nicknameInput.trim() || isSubmitting}
             >
-              {isSubmitting ? '처리 중...' : '1원 보내고 등록'}
+              {isSubmitting ? '처리 중...' : '무료로 등록하기'}
             </button>
             <button
               id="kakaotalk-sharing-btn"
