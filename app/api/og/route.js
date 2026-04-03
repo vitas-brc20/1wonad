@@ -15,7 +15,18 @@ export async function GET(req) {
     displayMessage = await getLatestMessage();
   }
 
-  const messageText = displayMessage?.text || '아직 등록된 메시지가 없습니다. 첫 메시지를 남겨보세요!';
+  const rawText = displayMessage?.text || '아직 등록된 메시지가 없습니다. 첫 메시지를 남겨보세요!';
+  
+  // 7글자씩 끊어서 줄바꿈 처리 (OG 이미지는 pre-wrap을 사용하여 \n 처리)
+  const formatText = (text) => {
+    const chunks = [];
+    for (let i = 0; i < text.length; i += 7) {
+      chunks.push(text.slice(i, i + 7));
+    }
+    return chunks.join('\n');
+  };
+
+  const messageText = formatText(rawText);
   const nicknameText = displayMessage?.nickname ? `- ${displayMessage.nickname}` : '';
 
   return new ImageResponse(
@@ -39,7 +50,16 @@ export async function GET(req) {
           textShadow: '0 0 10px #FFD700, 0 0 20px #FFD700',
         }}
       >
-        <div style={{ fontSize: 80, fontWeight: 'bold', marginBottom: 20, display: 'flex' }}>
+        <div 
+          style={{ 
+            fontSize: 80, 
+            fontWeight: 'bold', 
+            marginBottom: 20, 
+            display: 'flex',
+            whiteSpace: 'pre-wrap', // 줄바꿈 적용
+            lineHeight: 1.2
+          }}
+        >
             "{messageText}"
         </div>
         {nicknameText && (

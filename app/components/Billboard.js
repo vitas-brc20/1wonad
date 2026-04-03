@@ -100,6 +100,20 @@ export default function Billboard({ initialMessage }) {
     }
   };
 
+  // 메시지를 7글자씩 끊어서 줄바꿈 처리하는 함수
+  const formatBillboardText = (text) => {
+    if (!text) return '';
+    const chunks = [];
+    for (let i = 0; i < text.length; i += 7) {
+      chunks.push(text.slice(i, i + 7));
+    }
+    return chunks.map((chunk, index) => (
+      <span key={index} className="block">
+        {chunk}
+      </span>
+    ));
+  };
+
   return (
     <div className="bg-black text-white min-h-screen flex flex-col items-center justify-center p-4 font-sans w-full">
       <header className="w-full max-w-4xl text-center mb-8">
@@ -107,11 +121,12 @@ export default function Billboard({ initialMessage }) {
         <p className="text-lg text-gray-400 mt-2">당신의 메시지를 전 세계에 보여주세요!</p>
       </header>
 
-      <main className="w-full max-w-4xl mb-8 flex justify-center items-center h-48 bg-gray-900 border-2 border-yellow-400 rounded-lg p-4 shadow-lg">
+      <main className="w-full max-w-4xl mb-8 flex justify-center items-center h-64 bg-gray-900 border-2 border-yellow-400 rounded-lg p-4 shadow-lg overflow-hidden">
         {latestMessage ? (
-          <p className="text-4xl font-bold text-green-400 text-center">
-            "{latestMessage.text}" - {latestMessage.nickname}
-          </p>
+          <div className="text-4xl sm:text-5xl font-bold text-green-400 text-center leading-tight">
+             "{formatBillboardText(latestMessage.text)}"
+             <p className="text-xl mt-4 text-green-600/80 font-medium">- {latestMessage.nickname}</p>
+          </div>
         ) : (
           <p className="text-xl text-gray-500">아직 등록된 메시지가 없습니다. 첫 메시지를 남겨보세요!</p>
         )}
