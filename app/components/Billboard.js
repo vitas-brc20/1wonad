@@ -44,7 +44,8 @@ export default function Billboard({ initialMessage }) {
     }
   }, []);
 
-  useEffect(() => {
+  // 카카오톡 공유 함수
+  const handleShare = () => {
     if (window.Kakao && window.Kakao.isInitialized()) {
       const shareUrl = window.location.href;
       const imageUrl = `${window.location.origin}/api/og?id=${latestMessage?.id || 'no_message'}&_=${Date.now()}`;
@@ -52,8 +53,7 @@ export default function Billboard({ initialMessage }) {
         ? `"${latestMessage.text}" - ${latestMessage.nickname}`
         : '당신의 메시지를 전 세계에 보여주세요!';
 
-      window.Kakao.Share.createDefaultButton({
-        container: '#kakaotalk-sharing-btn',
+      window.Kakao.Share.sendDefault({
         objectType: 'feed',
         content: {
           title: '전광판',
@@ -74,8 +74,10 @@ export default function Billboard({ initialMessage }) {
           },
         ],
       });
+    } else {
+      alert('카카오톡 SDK가 아직 로드되지 않았습니다. 잠시 후 다시 시도해주세요.');
     }
-  }, [latestMessage]);
+  };
 
   const handleSubmit = async () => {
     if (!messageInput.trim() || !nicknameInput.trim() || isSubmitting) return;
@@ -168,6 +170,7 @@ export default function Billboard({ initialMessage }) {
             </button>
             <button
               id="kakaotalk-sharing-btn"
+              onClick={handleShare}
               className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-6 rounded-md transition-transform transform hover:scale-105"
             >
               카카오톡 공유
