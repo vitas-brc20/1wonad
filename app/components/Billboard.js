@@ -89,6 +89,8 @@ export default function Billboard({ initialMessage }) {
       if (result.success) {
         setMessageInput('');
         setNicknameInput('');
+        // 등록 성공 시 즉시 최신 메시지 상태를 업데이트하여 공유 버튼 내용을 갱신합니다.
+        setLatestMessage(result.data);
       } else {
         setError('메시지 등록 중 오류가 발생했습니다: ' + result.error);
       }
