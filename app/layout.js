@@ -61,7 +61,7 @@ export default function RootLayout({ children }) {
             <p>
               <a href="/policy" className="text-yellow-400 hover:underline">서비스 이용약관</a>
             </p>
-            <p className="text-gray-500">© 2026 이너몰. All rights reserved.</p>
+            <p className="text-gray-500">© 2026. All rights reserved.</p>
           </div>
         </footer>
       </body>
