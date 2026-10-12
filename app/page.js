@@ -1,8 +1,20 @@
-import { getLatestMessage } from "@/app/actions";
+import { getLatestMessage, getNextRequiredPrice, getHallOfFame } from "@/app/actions";
 import Billboard from "@/app/components/Billboard";
 
-export default async function Home() {
-  const latestMessage = await getLatestMessage();
+export const dynamic = 'force-dynamic';
 
-  return <Billboard initialMessage={latestMessage} />;
+export default async function Home() {
+  const [latestMessage, requiredPrice, hallOfFame] = await Promise.all([
+    getLatestMessage(),
+    getNextRequiredPrice(),
+    getHallOfFame(),
+  ]);
+
+  return (
+    <Billboard 
+      initialMessage={latestMessage} 
+      initialRequiredPrice={requiredPrice}
+      hallOfFame={hallOfFame}
+    />
+  );
 }

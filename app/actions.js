@@ -2,10 +2,11 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { revalidatePath, unstable_noStore as noStore } from 'next/cache';
+import { filterProfanity } from '@/app/lib/moderation';
 
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://qrysgpyuwcpwebxpujof.supabase.co',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || '',
   {
     auth: {
       persistSession: false
@@ -13,66 +14,99 @@ const supabase = createClient(
   }
 );
 
+const STEP_UP_PRICE = 500; // 탈환 시 기본 가산 금액
+const MIN_INITIAL_PRICE = 1000; // 시작 금액
+
 /**
- * 결제 완료된 가장 최신 메시지 1개를 가져옵니다.
+ * 현재 전광판을 점령 중인 최신 결제 완료 메시지를 가져옵니다.
  */
 export async function getLatestMessage() {
   noStore();
-  const { data, error } = await supabase
-    .from('messages')
-    .select('id, text, nickname')
-    .eq('status', 'paid')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from('messages')
+      .select('id, text, nickname, amount, created_at, paid_at, reign_seconds, contact')
+      .eq('status', 'paid')
+      .order('paid_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-  if (error && error.code !== 'PGRST116') {
-    console.error('Error fetching latest message:', error);
+    if (error) {
+      console.error('Error fetching latest message:', error);
+      return null;
+    }
+
+    return data;
+  } catch (err) {
+    console.error('Exception in getLatestMessage:', err);
     return null;
   }
-
-  return data;
 }
 
 /**
- * 특정 ID를 가진 결제 완료된 메시지를 가져옵니다.
+ * 다음 탈환에 필요한 최소 결제 금액을 계산합니다.
+ */
+export async function getNextRequiredPrice() {
+  noStore();
+  const latest = await getLatestMessage();
+  if (!latest || !latest.amount) {
+    return MIN_INITIAL_PRICE;
+  }
+  return Number(latest.amount) + STEP_UP_PRICE;
+}
+
+/**
+ * 명예의 전당 / 전광판 히스토리 랭킹을 가져옵니다.
+ */
+export async function getHallOfFame() {
+  noStore();
+  try {
+    // 1. 최고 금액 점령자 TOP 5
+    const { data: topAmounts } = await supabase
+      .from('messages')
+      .select('id, nickname, text, amount, paid_at')
+      .eq('status', 'paid')
+      .order('amount', { ascending: false })
+      .limit(5);
+
+    // 2. 최신 결제 내역 (배틀 히스토리) TOP 5
+    const { data: recentBattles } = await supabase
+      .from('messages')
+      .select('id, nickname, text, amount, paid_at')
+      .eq('status', 'paid')
+      .order('paid_at', { ascending: false })
+      .limit(5);
+
+    return {
+      topAmounts: topAmounts || [],
+      recentBattles: recentBattles || [],
+    };
+  } catch (err) {
+    console.error('Error fetching hall of fame:', err);
+    return { topAmounts: [], recentBattles: [] };
+  }
+}
+
+/**
+ * 특정 ID의 메시지를 가져옵니다.
  */
 export async function getMessageById(id) {
   noStore();
-  const { data, error } = await supabase
-    .from('messages')
-    .select('id, text, nickname')
-    .eq('id', id)
-    .eq('status', 'paid')
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from('messages')
+      .select('id, text, nickname, amount')
+      .eq('id', id)
+      .eq('status', 'paid')
+      .single();
 
-  if (error && error.code !== 'PGRST116') {
-    console.error(`Error fetching message by ID (${id}):`, error);
+    if (error && error.code !== 'PGRST116') {
+      console.error(`Error fetching message by ID (${id}):`, error);
+      return null;
+    }
+
+    return data;
+  } catch (err) {
     return null;
   }
-
-  return data;
-}
-
-/**
- * 새로운 메시지를 등록합니다. (무료 버전)
- */
-export async function createMessage(text, nickname) {
-  const { data, error } = await supabase
-    .from('messages')
-    .insert({
-      text: text,
-      nickname: nickname,
-      status: 'paid'
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Error creating message:', error);
-    return { success: false, error: error.message };
-  }
-
-  revalidatePath('/');
-  return { success: true, data };
 }

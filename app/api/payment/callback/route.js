@@ -18,51 +18,87 @@ export async function GET(req) {
   const pg_token = searchParams.get('pg_token');
   const partner_order_id = searchParams.get('partner_order_id');
 
-  // Case 1: Payment Success (pg_token is present)
+  // Case 1: 결제 승인 토큰(pg_token) 수신
   if (pg_token && partner_order_id) {
     try {
-      // 1. DB에서 tid를 가져옵니다.
-      const { data: messageData, error: fetchError } = await supabase
+      // 1. DB에서 결제 대기 중인 주문 조회
+      const { data: currentOrder, error: fetchError } = await supabase
         .from('messages')
-        .select('tid')
+        .select('*')
         .eq('id', partner_order_id)
         .single();
 
-      if (fetchError || !messageData) {
-        console.error('Callback error: Could not find order.', fetchError);
-        throw new Error('Order not found.');
+      if (fetchError || !currentOrder) {
+        console.error('Callback error: Order not found.', fetchError);
+        return NextResponse.redirect(new URL('/?status=fail&msg=order_not_found', process.env.NEXT_PUBLIC_BASE_URL));
       }
-      
-      const { tid } = messageData;
 
-      // 개발/운영 환경에 따라 다른 키를 사용
+      const { tid, amount: orderAmount, nickname } = currentOrder;
+
+      // 2. 동시성 검증 (동시에 여러 결제가 승인 대기 중일 때 현재 1등 점령 금액보다 낮으면 롤백/실패 처리)
+      const { data: currentKing } = await supabase
+        .from('messages')
+        .select('id, amount, paid_at, nickname, contact')
+        .eq('status', 'paid')
+        .order('paid_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (currentKing && currentKing.amount >= orderAmount && currentKing.id !== currentOrder.id) {
+        // 이미 다른 사용자가 더 높은 금액으로 먼저 점령을 완료한 경우
+        console.warn(`Race condition: Current king price (${currentKing.amount}) >= Order price (${orderAmount})`);
+        return NextResponse.redirect(
+          new URL(`/?status=overtaken&msg=already_overtaken`, process.env.NEXT_PUBLIC_BASE_URL)
+        );
+      }
+
+      // 3. 카카오페이 결제 승인 API 호출
       const secretKey = process.env.NODE_ENV === 'development'
-        ? process.env.KAKAOPAY_SECRET_DEV_KEY
+        ? (process.env.KAKAOPAY_SECRET_DEV_KEY || process.env.KAKAOPAY_SECRET_KEY)
         : process.env.KAKAOPAY_SECRET_KEY;
-        
+
       const kakaoPayApproveUrl = 'https://open-api.kakaopay.com/online/v1/payment/approve';
 
-      // 2. 카카오페이 '결제 승인' API에 보낼 데이터 (JSON 형식)
       const payload = {
         cid: 'TC0ONETIME',
         tid: tid,
         partner_order_id: partner_order_id,
-        partner_user_id: '1wonad-user',
+        partner_user_id: nickname,
         pg_token: pg_token,
       };
-      
-      // 3. 카카오페이 API 호출
+
       await axios.post(kakaoPayApproveUrl, payload, {
         headers: {
           'Authorization': `SECRET_KEY ${secretKey}`,
           'Content-Type': 'application/json',
         },
       });
-      
-      // 4. DB의 메시지 상태를 'paid'로 업데이트
+
+      const now = new Date().toISOString();
+
+      // 4. 기존 1등 유저의 점령 종료 시간(replaced_at) 및 유지 시간(reign_seconds) 기록
+      if (currentKing && currentKing.paid_at) {
+        const reignSec = Math.floor((new Date(now).getTime() - new Date(currentKing.paid_at).getTime()) / 1000);
+        await supabase
+          .from('messages')
+          .update({
+            replaced_at: now,
+            reign_seconds: reignSec
+          })
+          .eq('id', currentKing.id);
+
+        // ※ 유저 탈환 알림 (Revenge Trigger)
+        // 탈환당한 전 점령자(currentKing)에게 카카오 알림톡/웹푸시/이메일 연동 포인트
+        console.log(`[Revenge Trigger] 유저 '${currentKing.nickname}'(연락처: ${currentKing.contact || '미입력'})님이 '${nickname}'님에게 전광판을 빼앗겼습니다!`);
+      }
+
+      // 5. 이번 승인된 메시지를 새 점령자(paid)로 확정
       const { error: updateError } = await supabase
         .from('messages')
-        .update({ status: 'paid' })
+        .update({
+          status: 'paid',
+          paid_at: now
+        })
         .eq('id', partner_order_id);
 
       if (updateError) {
@@ -70,21 +106,16 @@ export async function GET(req) {
         throw new Error('Failed to update payment status.');
       }
 
-      // 5. 홈페이지 캐시를 무효화하여 모든 사용자가 새 메시지를 볼 수 있게 합니다.
+      // 6. 캐시 갱신 및 완료 리다이렉트
       revalidatePath('/');
-      
-      // 6. 결제가 완료되었으므로 홈페이지로 리다이렉트합니다.
-      return NextResponse.redirect(new URL('/', process.env.NEXT_PUBLIC_BASE_URL));
+      return NextResponse.redirect(new URL('/?status=success', process.env.NEXT_PUBLIC_BASE_URL));
 
     } catch (error) {
-      console.error('KakaoPay callback (approve) error:', error.response ? error.response.data : error.message);
-      // 실패 시 실패 페이지나 홈페이지로 리다이렉트
+      console.error('KakaoPay callback approve error:', error.response?.data || error.message);
       return NextResponse.redirect(new URL('/?status=fail', process.env.NEXT_PUBLIC_BASE_URL));
     }
   }
 
-  // Case 2: Payment Cancelled or Failed (pg_token is not present)
-  console.log('Payment cancelled or failed.');
-  // 사용자가 결제를 취소했거나 실패했으므로 홈페이지로 리다이렉트합니다.
+  // Case 2: 결제 취소 또는 실패
   return NextResponse.redirect(new URL('/?status=cancel', process.env.NEXT_PUBLIC_BASE_URL));
 }

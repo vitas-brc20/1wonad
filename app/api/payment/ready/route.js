@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
 import { createClient } from '@supabase/supabase-js';
+import { filterProfanity } from '@/app/lib/moderation';
 
-// 서버용 Supabase 클라이언트 초기화. RLS 우회를 위해 service_role 키 사용
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -13,16 +13,56 @@ const supabase = createClient(
   }
 );
 
+const STEP_UP_PRICE = 500;
+const MIN_INITIAL_PRICE = 1000;
+
 export async function POST(req) {
   try {
-    const { nickname, message } = await req.json();
+    const { nickname, message, contact, clientExpectedPrice } = await req.json();
 
-    // 1. Supabase에 메시지를 'pending' 상태로 임시 저장하고, 생성된 id를 가져옵니다.
+    // 1. 유효성 검사 및 비속어/도박 필터링
+    if (!nickname?.trim() || !message?.trim()) {
+      return NextResponse.json({ error: '닉네임과 메시지를 모두 입력해주세요.' }, { status: 400 });
+    }
+
+    const nicknameCheck = filterProfanity(nickname);
+    if (!nicknameCheck.isValid) {
+      return NextResponse.json({ error: nicknameCheck.error }, { status: 400 });
+    }
+
+    const messageCheck = filterProfanity(message);
+    if (!messageCheck.isValid) {
+      return NextResponse.json({ error: messageCheck.error }, { status: 400 });
+    }
+
+    // 2. 현재 전광판의 최신 금액 확인 및 탈환 금액(targetAmount) 계산
+    const { data: latestMessage } = await supabase
+      .from('messages')
+      .select('amount')
+      .eq('status', 'paid')
+      .order('paid_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const currentPrice = latestMessage?.amount ? Number(latestMessage.amount) : 0;
+    const requiredPrice = currentPrice > 0 ? currentPrice + STEP_UP_PRICE : MIN_INITIAL_PRICE;
+
+    // 클라이언트가 보낸 예상 가격이 이미 과거의 가격인 경우 (레이스 컨디션 방어 1단계)
+    if (clientExpectedPrice && Number(clientExpectedPrice) < requiredPrice) {
+      return NextResponse.json({
+        error: `다른 유저가 먼저 점령하여 탈환 금액이 ${requiredPrice.toLocaleString()}원으로 인상되었습니다! 화면을 새로고침해주세요.`,
+        requiredPrice
+      }, { status: 409 });
+    }
+
+    // 3. Supabase에 메시지를 'pending' 상태로 생성
     const { data: messageData, error: insertError } = await supabase
       .from('messages')
       .insert({
-        text: message,
-        nickname: nickname,
+        text: messageCheck.cleanText,
+        nickname: nicknameCheck.cleanText,
+        contact: contact ? contact.trim() : null,
+        amount: requiredPrice,
         status: 'pending'
       })
       .select()
@@ -30,38 +70,37 @@ export async function POST(req) {
 
     if (insertError) {
       console.error('Supabase insert error:', insertError);
-      throw new Error('Failed to create initial message entry.');
+      return NextResponse.json({ error: '주문 생성에 실패했습니다.' }, { status: 500 });
     }
 
     const partner_order_id = messageData.id.toString();
     const kakaoPayReadyUrl = 'https://open-api.kakaopay.com/online/v1/payment/ready';
-    
-    // 개발/운영 환경에 따라 다른 키를 사용
+
+    // 카카오페이 Secret 키 결정
     const secretKey = process.env.NODE_ENV === 'development'
-      ? process.env.KAKAOPAY_SECRET_DEV_KEY
+      ? (process.env.KAKAOPAY_SECRET_DEV_KEY || process.env.KAKAOPAY_SECRET_KEY)
       : process.env.KAKAOPAY_SECRET_KEY;
 
-    // 디버깅: Secret 키가 제대로 로드되었는지 확인
-    console.log(`[${process.env.NODE_ENV} mode] Secret Key used:`, secretKey);
+    if (!secretKey) {
+      return NextResponse.json({ error: '카카오페이 Secret Key가 설정되지 않았습니다. .env.local을 확인하세요.' }, { status: 500 });
+    }
 
-    // *** MODIFIED: Add partner_order_id to the callback URL ***
     const callback_url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/payment/callback?partner_order_id=${partner_order_id}`;
 
-    // 2. 카카오페이 '결제 준비' API에 보낼 데이터 (JSON 형식)
+    // 4. 카카오페이 결제 준비 요청 데이터 구성
     const payload = {
-      cid: 'TC0ONETIME',
+      cid: 'TC0ONETIME', // 테스트 CID (상용 계약 시 발급받은 CID 입력)
       partner_order_id: partner_order_id,
-      partner_user_id: '1wonad-user',
-      item_name: '1원 전광판 메시지',
+      partner_user_id: nicknameCheck.cleanText,
+      item_name: `킹오브더힐 전광판 점령권 (${requiredPrice.toLocaleString()}원)`,
       quantity: 1,
-      total_amount: 1,
+      total_amount: requiredPrice,
       tax_free_amount: 0,
       approval_url: callback_url,
       cancel_url: callback_url,
       fail_url: callback_url,
     };
-    
-    // 3. 카카오페이 API 호출 (v1 주소 + v2 인증 + JSON 바디)
+
     const response = await axios.post(kakaoPayReadyUrl, payload, {
       headers: {
         'Authorization': `SECRET_KEY ${secretKey}`,
@@ -69,30 +108,27 @@ export async function POST(req) {
       },
     });
 
-    const { tid, next_redirect_pc_url } = response.data;
-    
-    // 4. Supabase에 tid 업데이트
+    const { tid, next_redirect_pc_url, next_redirect_mobile_url, next_redirect_app_url } = response.data;
+
+    // 5. tid 저장
     if (tid) {
-      const { error: updateError } = await supabase
+      await supabase
         .from('messages')
         .update({ tid: tid })
         .eq('id', partner_order_id);
-      
-      if (updateError) {
-        console.error('Supabase update error:', updateError);
-        throw new Error('Failed to update message with tid.');
-      }
-    } else {
-      throw new Error('tid not received from KakaoPay.');
     }
-    
-    // 5. 클라이언트에 결제 페이지 URL 반환
-    return NextResponse.json({ redirect_url: next_redirect_pc_url });
+
+    return NextResponse.json({
+      redirect_url: next_redirect_pc_url,
+      mobile_url: next_redirect_mobile_url,
+      app_url: next_redirect_app_url,
+      amount: requiredPrice
+    });
 
   } catch (error) {
-    console.error('KakaoPay ready error:', error.response ? error.response.data : error.message);
+    console.error('KakaoPay ready error:', error.response?.data || error.message);
     return NextResponse.json(
-      { error: 'Payment preparation failed.', details: error.response ? error.response.data : error.message },
+      { error: '결제 준비 중 오류가 발생했습니다.', details: error.response?.data || error.message },
       { status: 500 }
     );
   }
