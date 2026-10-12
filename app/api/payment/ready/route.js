@@ -40,7 +40,7 @@ export async function POST(req) {
       .from('messages')
       .select('amount')
       .eq('status', 'paid')
-      .order('paid_at', { ascending: false })
+      .order('id', { ascending: false })
       .limit(1)
       .maybeSingle();
 

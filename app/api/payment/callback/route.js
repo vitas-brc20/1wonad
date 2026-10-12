@@ -38,9 +38,9 @@ export async function GET(req) {
       // 2. 동시성 검증 (동시에 여러 결제가 승인 대기 중일 때 현재 1등 점령 금액보다 낮으면 롤백/실패 처리)
       const { data: currentKing } = await supabase
         .from('messages')
-        .select('id, amount, paid_at, nickname, contact')
+        .select('id, amount, paid_at, created_at, nickname, contact')
         .eq('status', 'paid')
-        .order('paid_at', { ascending: false })
+        .order('id', { ascending: false })
         .limit(1)
         .maybeSingle();
 

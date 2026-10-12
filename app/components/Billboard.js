@@ -73,13 +73,14 @@ export default function Billboard({ initialMessage, initialRequiredPrice, hallOf
   // 점령 유지 시간 타이머 (1초마다 경과)
   useEffect(() => {
     const calcElapsed = () => {
-      if (!latestMessage?.paid_at) {
+      const targetTime = latestMessage?.paid_at || latestMessage?.created_at;
+      if (!targetTime) {
         setElapsedSeconds(0);
         return;
       }
-      const paidTime = new Date(latestMessage.paid_at).getTime();
+      const startTime = new Date(targetTime).getTime();
       const now = Date.now();
-      setElapsedSeconds(Math.max(0, Math.floor((now - paidTime) / 1000)));
+      setElapsedSeconds(Math.max(0, Math.floor((now - startTime) / 1000)));
     };
 
     calcElapsed();

@@ -27,7 +27,7 @@ export async function getLatestMessage() {
       .from('messages')
       .select('id, text, nickname, amount, created_at, paid_at, reign_seconds, contact')
       .eq('status', 'paid')
-      .order('paid_at', { ascending: false })
+      .order('id', { ascending: false })
       .limit(1)
       .maybeSingle();
 
@@ -64,7 +64,7 @@ export async function getHallOfFame() {
     // 1. 최고 금액 점령자 TOP 5
     const { data: topAmounts } = await supabase
       .from('messages')
-      .select('id, nickname, text, amount, paid_at')
+      .select('id, nickname, text, amount, paid_at, created_at')
       .eq('status', 'paid')
       .order('amount', { ascending: false })
       .limit(5);
@@ -72,9 +72,9 @@ export async function getHallOfFame() {
     // 2. 최신 결제 내역 (배틀 히스토리) TOP 5
     const { data: recentBattles } = await supabase
       .from('messages')
-      .select('id, nickname, text, amount, paid_at')
+      .select('id, nickname, text, amount, paid_at, created_at')
       .eq('status', 'paid')
-      .order('paid_at', { ascending: false })
+      .order('id', { ascending: false })
       .limit(5);
 
     return {
