@@ -53,26 +53,46 @@ export async function GET(req) {
       }
 
       // 3. 카카오페이 결제 승인 API 호출
-      const secretKey = process.env.NODE_ENV === 'development'
+      const cid = process.env.KAKAOPAY_CID || 'TC0ONETIME';
+      const isTestCid = cid === 'TC0ONETIME';
+
+      let secretKey = isTestCid
         ? (process.env.KAKAOPAY_SECRET_DEV_KEY || process.env.KAKAOPAY_SECRET_KEY)
-        : process.env.KAKAOPAY_SECRET_KEY;
+        : (process.env.KAKAOPAY_SECRET_KEY || process.env.KAKAOPAY_SECRET_DEV_KEY);
 
       const kakaoPayApproveUrl = 'https://open-api.kakaopay.com/online/v1/payment/approve';
 
       const payload = {
-        cid: 'TC0ONETIME',
+        cid: cid,
         tid: tid,
         partner_order_id: partner_order_id,
         partner_user_id: nickname,
         pg_token: pg_token,
       };
 
-      await axios.post(kakaoPayApproveUrl, payload, {
-        headers: {
-          'Authorization': `SECRET_KEY ${secretKey}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      try {
+        await axios.post(kakaoPayApproveUrl, payload, {
+          headers: {
+            'Authorization': `SECRET_KEY ${secretKey}`,
+            'Content-Type': 'application/json',
+          },
+        });
+      } catch (approveErr) {
+        const altKey = secretKey === process.env.KAKAOPAY_SECRET_KEY 
+          ? process.env.KAKAOPAY_SECRET_DEV_KEY 
+          : process.env.KAKAOPAY_SECRET_KEY;
+
+        if (altKey && approveErr.response?.data?.error_code === -403) {
+          await axios.post(kakaoPayApproveUrl, payload, {
+            headers: {
+              'Authorization': `SECRET_KEY ${altKey}`,
+              'Content-Type': 'application/json',
+            },
+          });
+        } else {
+          throw approveErr;
+        }
+      }
 
       const now = new Date().toISOString();
 

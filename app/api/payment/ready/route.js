@@ -76,10 +76,13 @@ export async function POST(req) {
     const partner_order_id = messageData.id.toString();
     const kakaoPayReadyUrl = 'https://open-api.kakaopay.com/online/v1/payment/ready';
 
-    // 카카오페이 Secret 키 결정
-    const secretKey = process.env.NODE_ENV === 'development'
+    // 카카오페이 Secret 키 결정: 테스트 CID(TC0ONETIME)는 DEV 키를 사용해야 -403(접근 금지됨)이 발생하지 않습니다.
+    const cid = process.env.KAKAOPAY_CID || 'TC0ONETIME';
+    const isTestCid = cid === 'TC0ONETIME';
+
+    let secretKey = isTestCid
       ? (process.env.KAKAOPAY_SECRET_DEV_KEY || process.env.KAKAOPAY_SECRET_KEY)
-      : process.env.KAKAOPAY_SECRET_KEY;
+      : (process.env.KAKAOPAY_SECRET_KEY || process.env.KAKAOPAY_SECRET_DEV_KEY);
 
     if (!secretKey) {
       return NextResponse.json({ error: '카카오페이 Secret Key가 설정되지 않았습니다. .env.local을 확인하세요.' }, { status: 500 });
@@ -89,7 +92,7 @@ export async function POST(req) {
 
     // 4. 카카오페이 결제 준비 요청 데이터 구성
     const payload = {
-      cid: 'TC0ONETIME', // 테스트 CID (상용 계약 시 발급받은 CID 입력)
+      cid: cid,
       partner_order_id: partner_order_id,
       partner_user_id: nicknameCheck.cleanText,
       item_name: `킹오브더힐 전광판 점령권 (${requiredPrice.toLocaleString()}원)`,
@@ -101,12 +104,32 @@ export async function POST(req) {
       fail_url: callback_url,
     };
 
-    const response = await axios.post(kakaoPayReadyUrl, payload, {
-      headers: {
-        'Authorization': `SECRET_KEY ${secretKey}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    let response;
+    try {
+      response = await axios.post(kakaoPayReadyUrl, payload, {
+        headers: {
+          'Authorization': `SECRET_KEY ${secretKey}`,
+          'Content-Type': 'application/json',
+        },
+      });
+    } catch (apiErr) {
+      // 만약 -403(권한 오류)이 발생했고 다른 키가 존재한다면 한 번 더 폴백 시도
+      const altKey = secretKey === process.env.KAKAOPAY_SECRET_KEY 
+        ? process.env.KAKAOPAY_SECRET_DEV_KEY 
+        : process.env.KAKAOPAY_SECRET_KEY;
+
+      if (altKey && apiErr.response?.data?.error_code === -403) {
+        console.warn('KakaoPay 403 error encountered, retrying with alternative secret key...');
+        response = await axios.post(kakaoPayReadyUrl, payload, {
+          headers: {
+            'Authorization': `SECRET_KEY ${altKey}`,
+            'Content-Type': 'application/json',
+          },
+        });
+      } else {
+        throw apiErr;
+      }
+    }
 
     const { tid, next_redirect_pc_url, next_redirect_mobile_url, next_redirect_app_url } = response.data;
 
