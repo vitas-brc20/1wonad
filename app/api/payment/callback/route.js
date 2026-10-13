@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import axios from 'axios';
 import { createClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
+import { sendRevengeAlert } from '@/app/lib/notification';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -108,8 +109,18 @@ export async function GET(req) {
           .eq('id', currentKing.id);
 
         // ※ 유저 탈환 알림 (Revenge Trigger)
-        // 탈환당한 전 점령자(currentKing)에게 카카오 알림톡/웹푸시/이메일 연동 포인트
-        console.log(`[Revenge Trigger] 유저 '${currentKing.nickname}'(연락처: ${currentKing.contact || '미입력'})님이 '${nickname}'님에게 전광판을 빼앗겼습니다!`);
+        // 탈환당한 전 점령자(currentKing)에게 카카오 알림톡/문자 발송
+        if (currentKing.contact) {
+          const nextPrice = Number(orderAmount) + 1;
+          sendRevengeAlert({
+            previousKing: currentKing,
+            newKingNickname: nickname,
+            nextPrice: nextPrice,
+            baseUrl: process.env.NEXT_PUBLIC_BASE_URL,
+          }).catch((notifyErr) => {
+            console.error('[Revenge Trigger 발송 에러]:', notifyErr);
+          });
+        }
       }
 
       // 5. 이번 승인된 메시지를 새 점령자(paid)로 확정
