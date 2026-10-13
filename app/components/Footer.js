@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 export default function Footer() {
-  const companyName = process.env.NEXT_PUBLIC_COMPANY_NAME || '1원 전광판 (1wonad)';
+  const companyName = process.env.NEXT_PUBLIC_COMPANY_NAME || '이너몰';
   const ownerName = process.env.NEXT_PUBLIC_OWNER_NAME || '인찬혁';
   const businessNumber = process.env.NEXT_PUBLIC_BUSINESS_NUMBER || '685-26-02075';
   const mailOrderNumber = process.env.NEXT_PUBLIC_MAIL_ORDER_NUMBER || '제 2025-고양덕양구-2848 호';
@@ -34,7 +34,7 @@ export default function Footer() {
         {/* 전자상거래법 필수 사업자 정보 표기 (PG사 가맹점 심사 필수 항목) */}
         <div className="space-y-1.5 text-gray-400 text-[11px] sm:text-xs leading-relaxed">
           <p className="flex flex-wrap justify-center sm:justify-start gap-x-3 gap-y-1">
-            <span><strong>상호:</strong> {companyName}</span>
+            <span><strong>상호:</strong> {companyName} (서비스명: 1원 전광판)</span>
             <span className="text-gray-700 hidden sm:inline">|</span>
             <span><strong>대표자:</strong> {ownerName}</span>
             <span className="text-gray-700 hidden sm:inline">|</span>
