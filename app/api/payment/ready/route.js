@@ -13,8 +13,10 @@ const supabase = createClient(
   }
 );
 
+import { getKSTTodayStart } from '@/app/lib/dateUtils';
+
 const STEP_UP_PRICE = 1;
-const MIN_INITIAL_PRICE = 1000;
+const MIN_INITIAL_PRICE = 1; // 매일 자정 00시 리셋 시 1원
 
 export async function POST(req) {
   try {
@@ -35,16 +37,18 @@ export async function POST(req) {
       return NextResponse.json({ error: messageCheck.error }, { status: 400 });
     }
 
-    // 2. 현재 전광판의 최신 금액 확인 및 탈환 금액(targetAmount) 계산
-    const { data: latestMessage } = await supabase
+    // 2. 오늘(KST 자정 이후) 전광판의 최신 금액 확인 및 탈환 금액(targetAmount) 계산
+    const todayStart = getKSTTodayStart();
+    const { data: todayLatest } = await supabase
       .from('messages')
       .select('amount')
       .eq('status', 'paid')
+      .gte('created_at', todayStart)
       .order('id', { ascending: false })
       .limit(1)
       .maybeSingle();
 
-    const currentPrice = latestMessage?.amount ? Number(latestMessage.amount) : 0;
+    const currentPrice = todayLatest?.amount ? Number(todayLatest.amount) : 0;
     const requiredPrice = currentPrice > 0 ? currentPrice + STEP_UP_PRICE : MIN_INITIAL_PRICE;
 
     // 클라이언트가 보낸 예상 가격이 이미 과거의 가격인 경우 (레이스 컨디션 방어 1단계)

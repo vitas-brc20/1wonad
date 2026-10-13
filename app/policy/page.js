@@ -44,6 +44,7 @@ export default function PolicyPage() {
             <li>전광판에는 항상 가장 최근에 결제를 완료한 단 1개의 메시지만 노출됩니다.</li>
             <li>다른 이용자가 새로운 광고를 결제하여 등록하는 순간 기존 메시지의 노출은 즉시 종료됩니다.</li>
             <li>메시지의 노출 유지 시간은 보장되지 않으며, 후속 등록자에 의해 언제든 교체될 수 있음에 동의 후 결제합니다.</li>
+            <li><strong>매일 00:00(한국 표준시 KST) 정각에 다음 점령에 필요한 최소 결제 금액은 1원으로 자동 리셋됩니다.</strong></li>
           </ul>
         </section>
 
@@ -64,14 +65,30 @@ export default function PolicyPage() {
           </ol>
         </section>
 
-        {/* 제4조 환불 정책 */}
-        <section>
+        {/* 제4조 취소 및 환불 정책 */}
+        <section id="refund">
           <h2 className="text-xl font-bold text-yellow-300 mb-3 flex items-center gap-2">
-            4. 환불 정책
+            4. 취소 및 환불 정책
           </h2>
           <p>
             디지털 콘텐츠 특성상 결제 승인과 동시에 전광판에 즉시 노출이 개시되므로, 전자상거래법 제17조 제2항에 따라 단순 변심에 의한 청약철회 및 환불이 불가능합니다. 단, 시스템 오류로 인한 결제 승인 실패나 중복 결제의 경우 전액 취소 처리됩니다.
           </p>
+        </section>
+
+        {/* 제5조 개인정보처리방침 */}
+        <section id="privacy">
+          <h2 className="text-xl font-bold text-yellow-300 mb-3 flex items-center gap-2">
+            5. 개인정보처리방침
+          </h2>
+          <p>
+            1원 전광판은 이용자의 개인정보를 최소한으로 처리합니다.
+          </p>
+          <ul className="list-disc pl-5 mt-2 space-y-1 text-gray-400">
+            <li><strong>수집 항목:</strong> 전광판 표시용 닉네임, 메시지 문구, 결제 식별자(TID)</li>
+            <li><strong>수집 목적:</strong> 전광판 메시지 표시 및 결제 상태 확인</li>
+            <li><strong>보유 기간:</strong> 메시지 노출 및 관련 법령에 따른 결제 기록 보존 후 파기</li>
+            <li>본 서비스는 금융정보(카드번호, 계좌번호 등)를 직접 저장하지 않으며, 공인 PG사(카카오페이)를 통해 안전하게 암호화 처리됩니다.</li>
+          </ul>
         </section>
 
         <section className="text-center pt-6 border-t border-gray-800">

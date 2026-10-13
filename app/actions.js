@@ -14,8 +14,10 @@ const supabase = createClient(
   }
 );
 
+import { getKSTTodayStart } from '@/app/lib/dateUtils';
+
 const STEP_UP_PRICE = 1; // 탈환 시 기본 가산 금액 (+1원)
-const MIN_INITIAL_PRICE = 1000; // 시작 금액
+const MIN_INITIAL_PRICE = 1; // 매일 자정 리셋 시 시작 금액 (1원)
 
 /**
  * 현재 전광판을 점령 중인 최신 결제 완료 메시지를 가져옵니다.
@@ -44,15 +46,43 @@ export async function getLatestMessage() {
 }
 
 /**
+ * 오늘(KST 자정 00:00 이후) 결제 완료된 최신 메시지를 가져옵니다.
+ */
+export async function getTodayLatestMessage() {
+  noStore();
+  const todayStart = getKSTTodayStart();
+  try {
+    const { data, error } = await supabase
+      .from('messages')
+      .select('id, text, nickname, amount, created_at, paid_at, reign_seconds, contact')
+      .eq('status', 'paid')
+      .gte('created_at', todayStart)
+      .order('id', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error fetching today latest message:', error);
+      return null;
+    }
+
+    return data;
+  } catch (err) {
+    return null;
+  }
+}
+
+/**
  * 다음 탈환에 필요한 최소 결제 금액을 계산합니다.
+ * 매일 자정(00:00 KST)에 1원으로 자동 리셋됩니다.
  */
 export async function getNextRequiredPrice() {
   noStore();
-  const latest = await getLatestMessage();
-  if (!latest || !latest.amount) {
-    return MIN_INITIAL_PRICE;
+  const todayLatest = await getTodayLatestMessage();
+  if (!todayLatest || !todayLatest.amount) {
+    return MIN_INITIAL_PRICE; // 오늘 첫 점령은 1원
   }
-  return Number(latest.amount) + STEP_UP_PRICE;
+  return Number(todayLatest.amount) + STEP_UP_PRICE;
 }
 
 /**

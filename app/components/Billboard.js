@@ -268,7 +268,7 @@ export default function Billboard({ initialMessage, initialRequiredPrice, hallOf
 
           {/* 하단 점령 규칙 안내 */}
           <div className="w-full mt-6 pt-4 border-t border-gray-900 flex justify-between items-center text-xs text-gray-400">
-            <span>⚔️ 탈환 규칙: 현재 점령가 + 1원</span>
+            <span>⚔️ 탈환 규칙: 현재 점령가 + 1원 <strong className="text-yellow-400 font-bold ml-1">(매일 00:00 1원 리셋)</strong></span>
             <span className="text-red-400 font-semibold animate-pulse">실시간 동기화 ON</span>
           </div>
         </div>

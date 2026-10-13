@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { getLatestMessage } from '@/app/actions';
+import Footer from '@/app/components/Footer';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -56,14 +57,7 @@ export default function RootLayout({ children }) {
           integrity="sha384-tJkjbtDbvoxO+diRuDtwRO9JXR7pjWnfjfRn5ePUpl7e7RJCxKCwwnfqUAdXh53p"
           crossOrigin="anonymous"
         ></script>
-        <footer className="w-full bg-gray-900 text-gray-400 text-xs py-8 px-4 text-center mt-auto border-t border-gray-800">
-          <div className="max-w-4xl mx-auto space-y-3">
-            <p>
-              <a href="/policy" className="text-yellow-400 hover:underline">서비스 이용약관</a>
-            </p>
-            <p className="text-gray-500">© 2026. All rights reserved.</p>
-          </div>
-        </footer>
+        <Footer />
       </body>
     </html>
   );
