@@ -13,7 +13,7 @@ const supabase = createClient(
   }
 );
 
-const STEP_UP_PRICE = 500;
+const STEP_UP_PRICE = 1;
 const MIN_INITIAL_PRICE = 1000;
 
 export async function POST(req) {

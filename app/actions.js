@@ -14,7 +14,7 @@ const supabase = createClient(
   }
 );
 
-const STEP_UP_PRICE = 500; // 탈환 시 기본 가산 금액
+const STEP_UP_PRICE = 1; // 탈환 시 기본 가산 금액 (+1원)
 const MIN_INITIAL_PRICE = 1000; // 시작 금액
 
 /**

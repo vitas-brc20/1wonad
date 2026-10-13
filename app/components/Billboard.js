@@ -58,7 +58,7 @@ export default function Billboard({ initialMessage, initialRequiredPrice, hallOf
           if (payload.new) {
             setLatestMessage(payload.new);
             const newAmount = Number(payload.new.amount || 1000);
-            setRequiredPrice(newAmount + 500);
+            setRequiredPrice(newAmount + 1);
             setToastMessage(`⚡ "${payload.new.nickname}"님이 ${newAmount.toLocaleString()}원으로 전광판을 점령했습니다!`);
           }
         }
@@ -263,7 +263,7 @@ export default function Billboard({ initialMessage, initialRequiredPrice, hallOf
 
           {/* 하단 점령 규칙 안내 */}
           <div className="w-full mt-6 pt-4 border-t border-gray-900 flex justify-between items-center text-xs text-gray-400">
-            <span>⚔️ 탈환 규칙: 현재 점령가 + 500원</span>
+            <span>⚔️ 탈환 규칙: 현재 점령가 + 1원</span>
             <span className="text-red-400 font-semibold animate-pulse">실시간 동기화 ON</span>
           </div>
         </div>
