@@ -19,7 +19,7 @@ export async function postRevengeTweet({
   previousKing,
   siteUrl,
 }) {
-  const url = siteUrl || process.env.NEXT_PUBLIC_BASE_URL || 'https://1wonad.com';
+  const url = siteUrl || process.env.NEXT_PUBLIC_BASE_URL || 'https://1wonad.vercel.app';
   const prevText = previousKing?.nickname ? ` (이전: "${previousKing.nickname}")` : '';
 
   // 트윗 본문 (280자 제한 내로 안전하게 구성)
