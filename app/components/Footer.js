@@ -2,12 +2,11 @@ import Link from 'next/link';
 
 export default function Footer() {
   const companyName = process.env.NEXT_PUBLIC_COMPANY_NAME || '1원 전광판 (1wonad)';
-  const ownerName = process.env.NEXT_PUBLIC_OWNER_NAME || '대표자명 미입력';
-  const businessNumber = process.env.NEXT_PUBLIC_BUSINESS_NUMBER || '000-00-00000';
-  const mailOrderNumber = process.env.NEXT_PUBLIC_MAIL_ORDER_NUMBER || '통신판매업 신고 준비중';
-  const address = process.env.NEXT_PUBLIC_COMPANY_ADDRESS || '서울특별시 강남구 테헤란로 (사업장 소재지)';
-  const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'support@1wonad.com';
-  const contactPhone = process.env.NEXT_PUBLIC_CONTACT_PHONE || '02-000-0000';
+  const ownerName = process.env.NEXT_PUBLIC_OWNER_NAME || '인찬혁';
+  const businessNumber = process.env.NEXT_PUBLIC_BUSINESS_NUMBER || '685-26-02075';
+  const mailOrderNumber = process.env.NEXT_PUBLIC_MAIL_ORDER_NUMBER || '제 2025-고양덕양구-2848 호';
+  const address = process.env.NEXT_PUBLIC_COMPANY_ADDRESS || '서울특별시 관악구 행운1마길 30';
+  const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'admin.keyin@gmail.com';
 
   return (
     <footer className="w-full bg-gray-950 text-gray-400 text-xs py-10 px-4 mt-auto border-t border-gray-800/80">
@@ -47,8 +46,6 @@ export default function Footer() {
             <span><strong>사업장 소재지:</strong> {address}</span>
           </p>
           <p className="flex flex-wrap justify-center sm:justify-start gap-x-3 gap-y-1">
-            <span><strong>고객센터:</strong> {contactPhone}</span>
-            <span className="text-gray-700 hidden sm:inline">|</span>
             <span><strong>이메일:</strong> {contactEmail}</span>
             <span className="text-gray-700 hidden sm:inline">|</span>
             <span><strong>호스팅 서비스:</strong> Vercel Inc.</span>
