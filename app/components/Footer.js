@@ -6,7 +6,7 @@ export default function Footer() {
   const businessNumber = process.env.NEXT_PUBLIC_BUSINESS_NUMBER || '685-26-02075';
   const mailOrderNumber = process.env.NEXT_PUBLIC_MAIL_ORDER_NUMBER || '제 2025-고양덕양구-2848 호';
   const address = process.env.NEXT_PUBLIC_COMPANY_ADDRESS || '서울특별시 관악구 행운1마길 30';
-  const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'admin.keyin@gmail.com';
+  const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'admin.key.in@gmail.com';
 
   return (
     <footer className="w-full bg-gray-950 text-gray-400 text-xs py-10 px-4 mt-auto border-t border-gray-800/80">
