@@ -16,7 +16,6 @@ export default function Billboard({ initialMessage, initialRequiredPrice, hallOf
   // 폼 입력 상태
   const [messageInput, setMessageInput] = useState('');
   const [nicknameInput, setNicknameInput] = useState('');
-  const [contactInput, setContactInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
@@ -147,7 +146,6 @@ export default function Billboard({ initialMessage, initialRequiredPrice, hallOf
         body: JSON.stringify({
           nickname: nicknameInput,
           message: messageInput,
-          contact: contactInput,
           clientExpectedPrice: requiredPrice,
         }),
       });
@@ -295,29 +293,16 @@ export default function Billboard({ initialMessage, initialRequiredPrice, hallOf
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="text-xs font-semibold text-gray-300 mb-1 block">점령자 닉네임 (최대 10자)</label>
-              <input
-                type="text"
-                placeholder="예: 강남호랑이"
-                maxLength={10}
-                value={nicknameInput}
-                onChange={(e) => setNicknameInput(e.target.value)}
-                className="w-full bg-gray-800 text-white placeholder-gray-500 border border-gray-700 focus:border-yellow-400 focus:outline-none rounded-xl px-4 py-3 text-sm transition-colors"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-gray-300 mb-1 block">내 X(트위터) 아이디 (선택)</label>
-              <input
-                type="text"
-                placeholder="뺏겼을 때 X 멘션 알림용 (예: @username)"
-                maxLength={50}
-                value={contactInput}
-                onChange={(e) => setContactInput(e.target.value)}
-                className="w-full bg-gray-800 text-white placeholder-gray-500 border border-gray-700 focus:border-yellow-400 focus:outline-none rounded-xl px-4 py-3 text-sm transition-colors"
-              />
-            </div>
+          <div className="mb-4">
+            <label className="text-xs font-semibold text-gray-300 mb-1 block">점령자 닉네임 (최대 10자)</label>
+            <input
+              type="text"
+              placeholder="예: 강남호랑이"
+              maxLength={10}
+              value={nicknameInput}
+              onChange={(e) => setNicknameInput(e.target.value)}
+              className="w-full bg-gray-800 text-white placeholder-gray-500 border border-gray-700 focus:border-yellow-400 focus:outline-none rounded-xl px-4 py-3 text-sm transition-colors"
+            />
           </div>
 
           <div className="mb-6">
@@ -359,16 +344,6 @@ export default function Billboard({ initialMessage, initialRequiredPrice, hallOf
               <span>카톡 도발 공유</span>
               <span>💬</span>
             </button>
-
-            <a
-              href="https://x.com/search?q=%231%EC%9B%90%EC%A0%84%EA%B4%91%ED%8Pan&f=live"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 font-bold py-4 px-5 rounded-xl transition-all flex items-center justify-center gap-2 text-sm"
-            >
-              <span>X 실시간 중계</span>
-              <span>🐦</span>
-            </a>
           </div>
         </div>
       </section>
