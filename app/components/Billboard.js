@@ -344,6 +344,16 @@ export default function Billboard({ initialMessage, initialRequiredPrice, hallOf
               <span>카톡 도발 공유</span>
               <span>💬</span>
             </button>
+
+            <a
+              href="https://x.com/1wonad"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-black hover:bg-gray-900 text-white border border-gray-700 font-bold py-4 px-5 rounded-xl transition-all flex items-center justify-center gap-2 text-sm"
+            >
+              <span>공식 X (@1wonad)</span>
+              <span className="font-mono text-base font-black">𝕏</span>
+            </a>
           </div>
         </div>
       </section>

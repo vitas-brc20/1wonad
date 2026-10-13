@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import axios from 'axios';
 import { createClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
+import { postRevengeTweet } from '@/app/lib/twitter';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -124,7 +125,20 @@ export async function GET(req) {
         throw new Error('Failed to update payment status.');
       }
 
-      // 6. 캐시 갱신 및 완료 리다이렉트
+      // 6. X(트위터 @1wonad) 실시간 탈환 속보 트윗 게시 (비동기 안전 처리)
+      const nextPrice = Number(orderAmount) + 1;
+      postRevengeTweet({
+        newKingNickname: nickname,
+        messageText: currentOrder.text,
+        amount: orderAmount,
+        nextPrice: nextPrice,
+        previousKing: currentKing,
+        siteUrl: process.env.NEXT_PUBLIC_BASE_URL,
+      }).catch((tweetErr) => {
+        console.error('[X(트위터) 탈환 트윗 포스팅 에러]:', tweetErr);
+      });
+
+      // 7. 캐시 갱신 및 완료 리다이렉트
       revalidatePath('/');
       return NextResponse.redirect(new URL('/?status=success', process.env.NEXT_PUBLIC_BASE_URL));
 
