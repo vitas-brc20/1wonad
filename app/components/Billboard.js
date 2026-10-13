@@ -211,13 +211,20 @@ export default function Billboard({ initialMessage, initialRequiredPrice, hallOf
       )}
 
       {/* 헤더 */}
-      <header className="w-full max-w-4xl text-center my-6">
+      <header className="w-full max-w-4xl text-center my-6 flex flex-col items-center">
         <div className="inline-block bg-red-600/20 border border-red-500/50 text-red-400 text-xs px-3 py-1 rounded-full font-semibold uppercase tracking-widest mb-3 animate-pulse">
           ⚡ 실시간 뺏기 배틀
         </div>
-        <h1 className="text-4xl sm:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-400 to-amber-500 tracking-tight">
-          1원 전광판 👑
-        </h1>
+        <div className="flex items-center justify-center gap-3">
+          <img 
+            src="/icon.svg" 
+            alt="1원 전광판 아이콘" 
+            className="w-10 h-10 sm:w-14 sm:h-14 rounded-2xl drop-shadow-[0_0_15px_rgba(250,204,21,0.5)] transform hover:scale-105 transition-transform" 
+          />
+          <h1 className="text-4xl sm:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-400 to-amber-500 tracking-tight">
+            1원 전광판
+          </h1>
+        </div>
         <p className="text-sm sm:text-base text-gray-400 mt-2">
           단 1초라도 더 전광판을 점령하세요. 뺏고 뺏기는 실시간 1원 전광판!
         </p>
