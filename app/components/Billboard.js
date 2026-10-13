@@ -27,7 +27,7 @@ export default function Billboard({ initialMessage, initialRequiredPrice, hallOf
       const params = new URLSearchParams(window.location.search);
       const status = params.get('status');
       if (status === 'success') {
-        setToastMessage('🎉 전광판 점령에 성공했습니다! 당신이 새로운 킹입니다!');
+        setToastMessage('🎉 전광판 점령에 성공했습니다! 현재 1위입니다!');
         window.history.replaceState({}, '', '/');
       } else if (status === 'overtaken') {
         setErrorMessage('⚠️ 결제 도중 다른 유저가 더 높은 금액으로 먼저 탈환하여 승인이 취소되었습니다.');
@@ -104,13 +104,13 @@ export default function Billboard({ initialMessage, initialRequiredPrice, hallOf
       const shareUrl = window.location.href;
       const imageUrl = `${window.location.origin}/api/og?id=${latestMessage?.id || 'no_message'}&_=${Date.now()}`;
       const descriptionText = latestMessage
-        ? `[현재 킹: ${latestMessage.nickname}] "${latestMessage.text}" (${Number(latestMessage.amount).toLocaleString()}원)`
+        ? `[현재 1위: ${latestMessage.nickname}] "${latestMessage.text}" (${Number(latestMessage.amount).toLocaleString()}원)`
         : '지금 1,000원으로 전광판을 점령해보세요!';
 
       window.Kakao.Share.sendDefault({
         objectType: 'feed',
         content: {
-          title: '🔥 킹 오브 더 힐: 실시간 전광판 배틀',
+          title: '🔥 1원 전광판: 실시간 뺏기 배틀',
           description: descriptionText,
           imageUrl: imageUrl,
           link: {
@@ -215,13 +215,13 @@ export default function Billboard({ initialMessage, initialRequiredPrice, hallOf
       {/* 헤더 */}
       <header className="w-full max-w-4xl text-center my-6">
         <div className="inline-block bg-red-600/20 border border-red-500/50 text-red-400 text-xs px-3 py-1 rounded-full font-semibold uppercase tracking-widest mb-3 animate-pulse">
-          ⚡ 실시간 영토 탈환 배틀 (King of the Hill)
+          ⚡ 실시간 뺏기 배틀
         </div>
         <h1 className="text-4xl sm:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-400 to-amber-500 tracking-tight">
-          1WON 전광판 👑
+          1원 전광판 👑
         </h1>
         <p className="text-sm sm:text-base text-gray-400 mt-2">
-          단 1초라도 더 전광판을 점령하세요. 뺏기는 순간 당신의 알림이 울립니다.
+          단 1초라도 더 전광판을 점령하세요. 뺏고 뺏기는 실시간 1원 전광판!
         </p>
       </header>
 
@@ -308,10 +308,10 @@ export default function Billboard({ initialMessage, initialRequiredPrice, hallOf
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-gray-300 mb-1 block">탈환 알림용 연락처 / 이메일 (선택)</label>
+              <label className="text-xs font-semibold text-gray-300 mb-1 block">내 X(트위터) 아이디 (선택)</label>
               <input
                 type="text"
-                placeholder="뺏겼을 때 알림 수신용 (예: 010-XXXX-XXXX 또는 이메일)"
+                placeholder="뺏겼을 때 X 멘션 알림용 (예: @username)"
                 maxLength={50}
                 value={contactInput}
                 onChange={(e) => setContactInput(e.target.value)}
@@ -346,7 +346,7 @@ export default function Billboard({ initialMessage, initialRequiredPrice, hallOf
                 <span>결제창 여는 중...</span>
               ) : (
                 <>
-                  <span>카카오페이로 {requiredPrice.toLocaleString()}원 결제하고 탈환</span>
+                  <span>카카오페이로 {requiredPrice.toLocaleString()}원 결제하고 점령</span>
                   <span className="text-xl">🚀</span>
                 </>
               )}
@@ -359,6 +359,16 @@ export default function Billboard({ initialMessage, initialRequiredPrice, hallOf
               <span>카톡 도발 공유</span>
               <span>💬</span>
             </button>
+
+            <a
+              href="https://x.com/search?q=%231%EC%9B%90%EC%A0%84%EA%B4%91%ED%8Pan&f=live"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 font-bold py-4 px-5 rounded-xl transition-all flex items-center justify-center gap-2 text-sm"
+            >
+              <span>X 실시간 중계</span>
+              <span>🐦</span>
+            </a>
           </div>
         </div>
       </section>

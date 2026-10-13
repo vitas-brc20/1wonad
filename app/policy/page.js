@@ -35,7 +35,7 @@ export default function PolicyPage() {
         {/* 제2조 서비스 제공 방식 */}
         <section>
           <h2 className="text-xl font-bold text-yellow-300 mb-3 flex items-center gap-2">
-            2. 광고 노출 및 점령(King of the Hill) 규칙
+            2. 광고 노출 및 실시간 뺏기 점령 규칙
           </h2>
           <p>
             메시지는 결제 승인 즉시 전광판의 메인 영역에 노출됩니다.

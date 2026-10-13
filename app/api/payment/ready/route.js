@@ -95,7 +95,7 @@ export async function POST(req) {
       cid: cid,
       partner_order_id: partner_order_id,
       partner_user_id: nicknameCheck.cleanText,
-      item_name: `킹오브더힐 전광판 점령권 (${requiredPrice.toLocaleString()}원)`,
+      item_name: `1원 전광판 점령권 (${requiredPrice.toLocaleString()}원)`,
       quantity: 1,
       total_amount: requiredPrice,
       tax_free_amount: 0,
